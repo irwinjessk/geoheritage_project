@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ patrimoine.nom }} - GeoHeritage{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="text-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmation de suppression
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="text-center mb-4">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                </div>
+                
+                <h5 class="text-center mb-4">Êtes-vous sûr de vouloir supprimer ce site ?</h5>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-monument me-2"></i>{{ patrimoine.nom }}</h6>
+                    <p class="mb-2"><strong>Type:</strong> {{ patrimoine.get_type_display }}</p>
+                    <p class="mb-2"><strong>Ville:</strong> {{ patrimoine.ville }}</p>
+                    <p class="mb-0"><strong>Description:</strong> {{ patrimoine.description|truncatewords:30 }}</p>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Cette action est irréversible !</strong> Une fois supprimé, le site patrimonial ne pourra pas être récupéré.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'heritage:detail' patrimoine.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

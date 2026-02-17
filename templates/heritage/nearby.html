@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sites à proximité - GeoHeritage{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-map me-2"></i>Sites patrimoniaux à proximité</h4>
+            </div>
+            <div class="card-body">
+                {% if message %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>{{ message }}
+                    </div>
+                {% endif %}
+                
+                <!-- Search Form -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="latitude" class="form-label">Latitude</label>
+                        <input type="number" step="any" class="form-control" id="latitude" name="lat" placeholder="Ex: 48.8566">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="longitude" class="form-label">Longitude</label>
+                        <input type="number" step="any" class="form-control" id="longitude" name="lng" placeholder="Ex: 2.3522">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="radius" class="form-label">Rayon (km)</label>
+                        <input type="number" class="form-control" id="radius" name="radius" value="10" min="1" max="100">
+                    </div>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <button type="button" class="btn btn-primary" onclick="searchNearby()">
+                        <i class="fas fa-search me-2"></i>Rechercher autour de moi
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="geolocateMe()">
+                        <i class="fas fa-crosshairs me-2"></i>Utiliser ma position
+                    </button>
+                </div>
+                
+                <!-- Map -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div id="nearby-map" style="height: 500px; border: 2px solid #dee2e6; border-radius: 8px; background-color: #f8f9fa;"></div>
+                    </div>
+                </div>
+                {% if patrimoines_list %}
+                    <div class="row">
+                        {% for patrimoine in patrimoines_list %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    {% if patrimoine.photo_url %}
+                                        <img src="{{ patrimoine.photo_url }}" class="card-img-top" alt="{{ patrimoine.nom }}" style="height: 150px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                            <i class="fas fa-monument text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ patrimoine.nom }}</h6>
+                                        <p class="card-text small">{{ patrimoine.description|truncatewords:10 }}</p>
+                                        
+                                        <div class="mb-2">
+                                            <span class="badge bg-primary">{{ patrimoine.get_type_display }}</span>
+                                            <span class="badge bg-info">{{ patrimoine.ville }}</span>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                ~{{ patrimoine.distance|floatformat:1 }} km
+                                            </small>
+                                            <a href="{% url 'heritage:detail' patrimoine.pk %}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>Voir
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                        <h5>Aucun site trouvé à proximité</h5>
+                        <p class="text-muted">
+                            Essayez d'augmenter le rayon de recherche ou utilisez votre position GPS
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// Données passées depuis Django
+window.geoData = {
+    patrimoines: {{ patrimoines|safe }},
+    centerLat: {{ center_lat|safe }},
+    centerLng: {{ center_lng|safe }},
+    zoom: {{ zoom|safe }}
+};
+
+// Initialiser la carte quand la page est chargée
+window.addEventListener('DOMContentLoaded', function() {
+    var map = L.map('nearby-map').setView([window.geoData.centerLat, window.geoData.centerLng], window.geoData.zoom);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    window.geoData.patrimoines.forEach(function(patrimoine) {
+        L.marker([patrimoine.latitude, patrimoine.longitude]).addTo(map)
+            .bindPopup('<b>' + patrimoine.nom + '</b><br>' + patrimoine.ville + 
+                (patrimoine.distance ? '<br>Distance: ' + patrimoine.distance + ' km' : ''));
+    });
+    
+    if (window.geoData.patrimoines.length > 0) {
+        var group = L.featureGroup(window.geoData.patrimoines.map(function(p) {
+            return L.marker([p.latitude, p.longitude]);
+        }));
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+});
+
+function searchNearby() {
+    var lat = document.getElementById('latitude').value;
+    var lng = document.getElementById('longitude').value;
+    var radius = document.getElementById('radius').value;
+    
+    if (!lat || !lng) {
+        alert('Veuillez entrer des coordonnées GPS');
+        return;
+    }
+    
+    window.location.href = '/heritage/nearby/?lat=' + lat + '&lng=' + lng + '&radius=' + radius;
+}
+
+function geolocateMe() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+            document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+        }, function(error) {
+            alert('Impossible d\'obtenir votre position: ' + error.message);
+        });
+    } else {
+        alert('La géolocalisation n\'est pas supportée par votre navigateur');
+    }
+}
+</script>
+{% endblock %}

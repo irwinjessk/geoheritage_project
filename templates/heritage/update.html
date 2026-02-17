@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Ajouter un site - GeoHeritage{% endblock %}
+{% block title %}Modifier {{ patrimoine.nom }} - GeoHeritage{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,11 +8,11 @@
         <div class="card">
             <div class="card-header">
                 <h4 class="text-center">
-                    <i class="fas fa-plus me-2"></i>Ajouter un site patrimonial
+                    <i class="fas fa-edit me-2"></i>Modifier {{ patrimoine.nom }}
                 </h4>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" action="{% url 'heritage:update' patrimoine.pk %}">
                     {% csrf_token %}
                     
                     {% if messages %}
@@ -35,7 +35,7 @@
                             <label for="nom" class="form-label">
                                 <i class="fas fa-monument me-1"></i>Nom du site *
                             </label>
-                            <input type="text" class="form-control" id="nom" name="nom" required>
+                            <input type="text" class="form-control" id="nom" name="nom" value="{{ patrimoine.nom }}" required>
                         </div>
                         
                         <div class="col-md-6 mb-3">
@@ -43,9 +43,8 @@
                                 <i class="fas fa-tag me-1"></i>Type *
                             </label>
                             <select class="form-select" id="type" name="type" required>
-                                <option value="">Sélectionner un type</option>
                                 {% for type_choice in types %}
-                                    <option value="{{ type_choice.0 }}">{{ type_choice.1 }}</option>
+                                    <option value="{{ type_choice.0 }}" {% if patrimoine.type == type_choice.0 %}selected{% endif %}>{{ type_choice.1 }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -54,8 +53,7 @@
                             <label for="description" class="form-label">
                                 <i class="fas fa-align-left me-1"></i>Description *
                             </label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-                            <div class="form-text">Décrivez le site, son histoire, son importance...</div>
+                            <textarea class="form-control" id="description" name="description" rows="4" required>{{ patrimoine.description }}</textarea>
                         </div>
                     </div>
                     
@@ -70,28 +68,21 @@
                             <label for="ville" class="form-label">
                                 <i class="fas fa-city me-1"></i>Ville *
                             </label>
-                            <input type="text" class="form-control" id="ville" name="ville" required>
+                            <input type="text" class="form-control" id="ville" name="ville" value="{{ patrimoine.ville }}" required>
                         </div>
                         
                         <div class="col-md-3 mb-3">
                             <label for="latitude" class="form-label">
                                 <i class="fas fa-map-pin me-1"></i>Latitude *
                             </label>
-                            <input type="number" step="any" class="form-control" id="latitude" name="latitude" required>
+                            <input type="number" step="any" class="form-control" id="latitude" name="latitude" value="{{ patrimoine.latitude }}" required>
                         </div>
                         
                         <div class="col-md-3 mb-3">
                             <label for="longitude" class="form-label">
                                 <i class="fas fa-map-pin me-1"></i>Longitude *
                             </label>
-                            <input type="number" step="any" class="form-control" id="longitude" name="longitude" required>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <button type="button" class="btn btn-outline-secondary" id="geolocate-btn">
-                                <i class="fas fa-crosshairs me-2"></i>Utiliser ma position actuelle
-                            </button>
-                            <div class="form-text">Cliquez pour obtenir automatiquement vos coordonnées GPS</div>
+                            <input type="number" step="any" class="form-control" id="longitude" name="longitude" value="{{ patrimoine.longitude }}" required>
                         </div>
                     </div>
                     
@@ -106,15 +97,14 @@
                             <label for="date_creation" class="form-label">
                                 <i class="fas fa-calendar-alt me-1"></i>Date de création *
                             </label>
-                            <input type="date" class="form-control" id="date_creation" name="date_creation" required>
+                            <input type="date" class="form-control" id="date_creation" name="date_creation" value="{{ patrimoine.date_creation|date:'Y-m-d' }}" required>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="photo_url" class="form-label">
                                 <i class="fas fa-image me-1"></i>URL de la photo
                             </label>
-                            <input type="url" class="form-control" id="photo_url" name="photo_url" placeholder="https://example.com/photo.jpg">
-                            <div class="form-text">Laissez vide pour ne pas mettre de photo</div>
+                            <input type="url" class="form-control" id="photo_url" name="photo_url" value="{{ patrimoine.photo_url }}" placeholder="https://example.com/photo.jpg">
                         </div>
                     </div>
                     
@@ -122,11 +112,11 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'heritage:list' %}" class="btn btn-secondary">
+                                <a href="{% url 'heritage:detail' patrimoine.pk %}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left me-2"></i>Annuler
                                 </a>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Sauvegarder le site
+                                    <i class="fas fa-save me-2"></i>Mettre à jour
                                 </button>
                             </div>
                         </div>
@@ -150,21 +140,4 @@
         border-radius: 8px;
     }
 </style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.getElementById('geolocate-btn').addEventListener('click', function() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
-            document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
-        }, function(error) {
-            alert('Impossible d\'obtenir votre position: ' + error.message);
-        });
-    } else {
-        alert('La géolocalisation n\'est pas supportée par votre navigateur');
-    }
-});
-</script>
 {% endblock %}

@@ -15,36 +15,27 @@
                 <form method="post">
                     {% csrf_token %}
                     
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
                     {% endif %}
                     
                     <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">
+                        <label for="username" class="form-label">
                             <i class="fas fa-user me-1"></i>Nom d'utilisateur
                         </label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                            <div class="text-danger">
-                                {{ form.username.errors }}
-                            </div>
-                        {% endif %}
+                        <input type="text" class="form-control" id="username" name="username" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                        <label for="password" class="form-label">
                             <i class="fas fa-lock me-1"></i>Mot de passe
                         </label>
-                        {{ form.password }}
-                        {% if form.password.errors %}
-                            <div class="text-danger">
-                                {{ form.password.errors }}
-                            </div>
-                        {% endif %}
+                        <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     
                     <div class="mb-3 form-check">
@@ -62,11 +53,11 @@
                 </form>
                 
                 <div class="text-center mt-3">
-                    <p>Vous n'avez pas de compte ? 
+                    <p>
                         <a href="{% url 'account:register' %}">Inscrivez-vous</a>
                     </p>
                     <p>
-                        <a href="{% url 'account:password_reset' %}">Mot de passe oublié ?</a>
+                        <a href="#">Mot de passe oublié ?</a>
                     </p>
                 </div>
             </div>
