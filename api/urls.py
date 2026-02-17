@@ -30,7 +30,4 @@ urlpatterns = [
     path('patrimoines/map-data/', PatrimoineMapView.as_view(), name='patrimoine_map_data'),
     path('patrimoines/nearby/', PatrimoineNearbyView.as_view(), name='patrimoine_nearby'),
     path('patrimoines/<int:pk>/', PatrimoineDetailView.as_view(), name='patrimoine_detail'),
-    
-    # Documentation Swagger
-    path('docs/', include('rest_framework.urls', namespace='rest_framework')),
 ]

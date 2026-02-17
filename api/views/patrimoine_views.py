@@ -4,11 +4,14 @@ CRUD operations avec permissions JWT
 """
 
 from rest_framework import status, generics, filters, views
+from rest_framework import generics, views, status, pagination
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from heritage.models import Patrimoine
 from api.permissions import (
@@ -26,19 +29,42 @@ class PatrimoinePagination(PageNumberPagination):
     Pagination personnalisée pour les patrimoines
     """
     page_size = 12
-    page_size_query_param = 'page'
+    page_size_query_param = 'page_size'
     max_page_size = 100
 
 
 class PatrimoineListCreateView(generics.ListCreateAPIView):
     """
-    Vue pour lister et créer des patrimoines
+    Liste et création des patrimoines avec filtres
     """
     permission_classes = [CanCreatePatrimoine]
+    queryset = Patrimoine.objects.all()
     serializer_class = PatrimoineSerializer
     pagination_class = PatrimoinePagination
-    queryset = Patrimoine.objects.all()
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['nom', 'description', 'ville']
+    ordering_fields = ['nom', 'ville', 'date_creation', 'created_at']
     
+    @swagger_auto_schema(
+        operation_description="Lister tous les sites patrimoniaux avec filtres optionnels",
+        responses={200: PatrimoineSerializer(many=True)},
+        manual_parameters=[
+            openapi.Parameter(
+                'ville',
+                openapi.IN_QUERY,
+                description="Filtrer par ville",
+                type=openapi.TYPE_STRING,
+                required=False
+            ),
+            openapi.Parameter(
+                'type',
+                openapi.IN_QUERY,
+                description="Filtrer par type de patrimoine",
+                type=openapi.TYPE_STRING,
+                required=False
+            ),
+        ]
+    )
     def get_queryset(self):
         queryset = Patrimoine.objects.all()
         
@@ -159,6 +185,11 @@ class PatrimoineMapView(views.APIView):
     """
     permission_classes = []  # Accès public pour la carte
     
+    @swagger_auto_schema(
+        operation_description="Obtenir les données légères des patrimoines pour affichage sur carte",
+        responses={200: PatrimoineMapSerializer(many=True)},
+        tags=['carte']
+    )
     def get(self, request):
         patrimoines = Patrimoine.objects.filter(
             latitude__isnull=False,
