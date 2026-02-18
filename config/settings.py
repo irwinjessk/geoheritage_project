@@ -81,16 +81,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'geoheritage_db',
-        'USER': 'admin',
-        'PASSWORD': 'qwerty12345',
-        'HOST': 'localhost',
-        'PORT': '5432',
+import dj_database_url
+
+if DEBUG:
+    # Configuration locale pour développement
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'geoheritage_db',
+            'USER': 'admin',
+            'PASSWORD': 'qwerty12345',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }
-}
+else:
+    # Configuration pour Render (production)
+    DATABASES = {
+        "default": dj_database_url.config(conn_max_age=600)
+    }
 
 
 # Password validation
@@ -177,14 +186,23 @@ REDOC_SETTINGS = {
 # https://docs.djangoproject.com/en/5.2/ref/csrf/#csrf-exemptions
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = not DEBUG
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:8005",
-    "http://127.0.0.1:8005",
-    "http://localhost:4200",  # Angular dev server
-    "http://127.0.0.1:4200",   # Angular dev server
-]
+
+# CORS settings - développement et production
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:8005",
+        "http://127.0.0.1:8005",
+        "http://localhost:4200",  # Angular dev server
+        "http://127.0.0.1:4200",   # Angular dev server
+    ]
+else:
+    # Production - autoriser les domaines Vercel/Netlify
+    CORS_ALLOWED_ORIGINS = [
+        "https://*.vercel.app",
+        "https://*.netlify.app",
+    ]
 
 # Django REST Framework Configuration
 # https://www.django-rest-framework.org/api-guide/settings/
