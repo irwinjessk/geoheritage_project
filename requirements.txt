@@ -29,6 +29,9 @@ swagger-spec-validator==3.0.4
 psycopg2-binary==2.9.10
 dj-database-url==2.1.0
 
+# WSGI Server
+gunicorn==21.2.0
+
 # Image Processing
 Pillow==11.3.0
 
