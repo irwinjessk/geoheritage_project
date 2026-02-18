@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-)q*!jl1egu=@za3k4)a@&ln5pmd)i(5_$37i@a!-*67=ym+p$k'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -83,23 +84,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 import dj_database_url
 
-if DEBUG:
-    # Configuration locale pour développement
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'geoheritage_db',
-            'USER': 'admin',
-            'PASSWORD': 'qwerty12345',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
-else:
-    # Configuration pour Render (production)
-    DATABASES = {
-        "default": dj_database_url.config(conn_max_age=600)
-    }
+DATABASES = {
+    "default": dj_database_url.config(
+        default="postgresql://admin:qwerty12345@localhost:5432/geoheritage_db",
+        conn_max_age=600
+    )
+}
 
 
 # Password validation
@@ -148,6 +138,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
