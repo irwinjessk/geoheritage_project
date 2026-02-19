@@ -74,5 +74,42 @@
     .form-control {
         border-radius: 8px;
     }
+    
+    /* Footer collé en bas - pas d'espace */
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    main .container {
+        max-width: 100%;
+        padding: 0;
+        width: 100%;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Supprimer le margin-top du main pour cette page */
+    main.container.mt-4 {
+        margin-top: 0 !important;
+    }
+    
+    /* Garder la taille normale du formulaire */
+    .row.justify-content-center {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
 </style>
 {% endblock %}
