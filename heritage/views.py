@@ -41,11 +41,9 @@ def patrimoine_detail(request, pk):
 
 
 @login_required
-@contributeur_required
 def patrimoine_create(request):
-    """Créer un patrimoine (contributeur et plus)"""
-    # Debug pour voir les infos utilisateur
-    print(f"DEBUG: User {request.user.username}, roles: {[r.name for r in request.user.roles.all()]}, levels: {[r.level for r in request.user.roles.all()]}")
+    """Créer un patrimoine (utilisateur connecté)"""
+    print(f"DEBUG: User {request.user.username} est connecté et essaie de créer un patrimoine")
     
     if request.method == 'POST':
         nom = request.POST.get('nom')
@@ -76,9 +74,9 @@ def patrimoine_create(request):
 
 
 @login_required
-@can_edit_patrimoine
-def patrimoine_update(request, patrimoine):
-    """Modifier un patrimoine (avec permissions)"""
+def patrimoine_update(request, pk):
+    """Modifier un patrimoine (utilisateur connecté)"""
+    patrimoine = get_object_or_404(Patrimoine, pk=pk)
     
     if request.method == 'POST':
         patrimoine.nom = request.POST.get('nom', patrimoine.nom)
@@ -100,9 +98,10 @@ def patrimoine_update(request, patrimoine):
     })
 
 
-@can_edit_patrimoine
-def patrimoine_delete(request, patrimoine):
-    """Supprimer un patrimoine (avec permissions)"""
+@login_required
+def patrimoine_delete(request, pk):
+    """Supprimer un patrimoine (utilisateur connecté)"""
+    patrimoine = get_object_or_404(Patrimoine, pk=pk)
     
     if request.method == 'POST':
         nom = patrimoine.nom
